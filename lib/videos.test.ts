@@ -34,6 +34,14 @@ describe("loadVideo", () => {
 		expect(result.ok).toBe(false);
 		expect(getVideo).not.toHaveBeenCalled();
 	});
+
+	it("resolves with the exact video object the client returned, not a reshaped copy", async () => {
+		vi.stubEnv("HYPERSERVE_API_KEY", "key");
+		const resolved = video({ id: "vid-1", status: "processing", customMetadata: { title: "clip" } });
+		getVideo.mockResolvedValue(resolved);
+		const { loadVideo } = await import("./videos");
+		expect(await loadVideo("vid-1")).toEqual({ ok: true, video: resolved });
+	});
 });
 
 describe("loadVideos", () => {
@@ -65,6 +73,11 @@ describe("bestReadyResolution", () => {
 		expect(result?.label).toBe("1080p");
 	});
 
+	it("relies on ALL_RESOLUTIONS being ordered smallest to largest: 480p sorts before 1080p", async () => {
+		const { ALL_RESOLUTIONS } = await import("@/lib/upload-validation");
+		expect(ALL_RESOLUTIONS.indexOf("480p")).toBeLessThan(ALL_RESOLUTIONS.indexOf("1080p"));
+	});
+
 	it("ignores renditions that are not ready", async () => {
 		const { bestReadyResolution } = await import("./videos");
 		const result = bestReadyResolution(
@@ -72,6 +85,19 @@ describe("bestReadyResolution", () => {
 				resolutions: {
 					"480p": { id: "r1", status: "ready", videoUrl: "low", thumbnailImageUrls: [] },
 					"1080p": { id: "r2", status: "processing", videoUrl: "", thumbnailImageUrls: [] },
+				},
+			}),
+		);
+		expect(result?.label).toBe("480p");
+	});
+
+	it("ignores a ready rendition with an empty videoUrl, independent of the not-ready rule", async () => {
+		const { bestReadyResolution } = await import("./videos");
+		const result = bestReadyResolution(
+			video({
+				resolutions: {
+					"480p": { id: "r1", status: "ready", videoUrl: "low", thumbnailImageUrls: [] },
+					"1080p": { id: "r2", status: "ready", videoUrl: "", thumbnailImageUrls: [] },
 				},
 			}),
 		);
