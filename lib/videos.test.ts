@@ -73,9 +73,17 @@ describe("bestReadyResolution", () => {
 		expect(result?.label).toBe("1080p");
 	});
 
-	it("relies on ALL_RESOLUTIONS being ordered smallest to largest: 480p sorts before 1080p", async () => {
+	it("picks the last entry of ALL_RESOLUTIONS when every rendition is ready, proving it depends on that order", async () => {
 		const { ALL_RESOLUTIONS } = await import("@/lib/upload-validation");
-		expect(ALL_RESOLUTIONS.indexOf("480p")).toBeLessThan(ALL_RESOLUTIONS.indexOf("1080p"));
+		const { bestReadyResolution } = await import("./videos");
+		const resolutions = Object.fromEntries(
+			ALL_RESOLUTIONS.map((label) => [
+				label,
+				{ id: label, status: "ready", videoUrl: `url-${label}`, thumbnailImageUrls: [] },
+			]),
+		) as VideoResult["resolutions"];
+		const result = bestReadyResolution(video({ resolutions }));
+		expect(result?.label).toBe(ALL_RESOLUTIONS[ALL_RESOLUTIONS.length - 1]);
 	});
 
 	it("ignores renditions that are not ready", async () => {
