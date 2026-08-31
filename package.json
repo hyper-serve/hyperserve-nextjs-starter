@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "pretypecheck": "next typegen",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
