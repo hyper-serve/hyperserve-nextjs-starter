@@ -10,7 +10,17 @@ export async function POST(request: Request) {
 	const signature = request.headers.get("x-hyperserve-signature");
 
 	const config = readConfig();
-	if (config?.webhookSecret == null) {
+	if (config === null) {
+		appendWebhookLogEntry({
+			verified: false,
+			event: null,
+			videoId: null,
+			rawBody,
+			note: "HYPERSERVE_API_KEY is not set, so this event could not be verified.",
+		});
+		return NextResponse.json({ error: "HYPERSERVE_API_KEY is not set." }, { status: 500 });
+	}
+	if (config.webhookSecret == null) {
 		appendWebhookLogEntry({
 			verified: false,
 			event: null,
