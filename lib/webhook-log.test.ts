@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	MAX_WEBHOOK_LOG_ENTRIES,
 	appendWebhookLogEntry,
@@ -51,5 +51,19 @@ describe("webhook log", () => {
 		const entries = listWebhookLogEntries();
 		expect(entries).toHaveLength(MAX_WEBHOOK_LOG_ENTRIES);
 		expect(entries.at(-1)?.videoId).toBe("vid-5");
+	});
+
+	it("survives a fresh module instance within the same process", async () => {
+		// Next loads the route handler and the server component through separate
+		// module graphs, which vi.resetModules() reproduces inside one test: a
+		// second import of this file gets a new module instance, exactly like the
+		// receiver and the page do in the real app. The log must still be visible
+		// there, or an entry the receiver logs never reaches the page.
+		entry({ videoId: "persisted-across-instances" });
+		vi.resetModules();
+		const fresh = await import("./webhook-log");
+		expect(fresh.listWebhookLogEntries().map((item) => item.videoId)).toContain(
+			"persisted-across-instances",
+		);
 	});
 });

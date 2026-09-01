@@ -47,7 +47,7 @@ export default function WebhooksPage() {
 							>
 								{entry.verified ? "verified" : "rejected"}
 							</span>
-							<span className="text-neutral-200">{entry.event ?? "unparseable body"}</span>
+							<span className="text-neutral-200">{describeEvent(entry)}</span>
 							<span className="font-mono text-xs text-neutral-500">{entry.videoId?.slice(0, 8) ?? ""}</span>
 							<span className="ml-auto text-xs text-neutral-600">{entry.receivedAt}</span>
 						</summary>
@@ -70,6 +70,22 @@ function formatBody(rawBody: string): string {
 	}
 }
 
+// entry.event is null in two different situations: the body was not JSON at
+// all, or it parsed fine but had no string "event" field. Those call for
+// different next steps, so label them differently rather than collapsing both
+// into "unparseable body".
+function describeEvent(entry: { event: string | null; rawBody: string }): string {
+	if (entry.event !== null) {
+		return entry.event;
+	}
+	try {
+		JSON.parse(entry.rawBody);
+		return "no event field";
+	} catch {
+		return "unparseable body";
+	}
+}
+
 function Setup() {
 	return (
 		<div className="mt-8 space-y-5">
@@ -86,7 +102,8 @@ function Setup() {
 					<span className="text-neutral-500">2.</span> Paste the tunnel URL below to build your receiver URL.
 				</li>
 				<li>
-					<span className="text-neutral-500">3.</span> Register it at{" "}
+					<span className="text-neutral-500">3.</span> Register the receiver URL from step 2 (not the bare tunnel
+					URL) at{" "}
 					<a className="text-sky-400 underline" href="https://hyperserve.io/webhooks" target="_blank" rel="noreferrer">
 						hyperserve.io/webhooks
 					</a>

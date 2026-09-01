@@ -8,17 +8,21 @@ export function ReceiverUrl() {
 	const [host, setHost] = useState("");
 	const [copied, setCopied] = useState(false);
 	const trimmed = host.trim().replace(/\/+$/, "");
-	const url = trimmed === "" ? null : `${trimmed.startsWith("http") ? trimmed : `https://${trimmed}`}${RECEIVER_PATH}`;
+	const hasScheme = /^https?:\/\//i.test(trimmed);
+	const url = trimmed === "" ? null : `${hasScheme ? trimmed : `https://${trimmed}`}${RECEIVER_PATH}`;
 
 	function copy() {
-		if (url === null) {
+		// navigator.clipboard is undefined in an insecure context, and reading it
+		// there is what throws, before any promise exists to catch. Guard the
+		// property itself, then keep the .catch for a call that rejects.
+		if (url === null || !navigator.clipboard) {
 			return;
 		}
 		navigator.clipboard
 			.writeText(url)
 			.then(() => setCopied(true))
 			.catch(() => {
-				// Clipboard access can fail or be unavailable (e.g. an insecure context).
+				// Clipboard access can still fail (e.g. permission denied).
 				// The URL above is still selectable text, so failing quietly is fine.
 			});
 	}
