@@ -67,7 +67,7 @@ export function UploadPanel() {
 					className="hidden"
 					onChange={(event) => {
 						const file = event.target.files?.[0];
-						if (file) void upload(file);
+						if (file && !busy) void upload(file);
 						event.target.value = "";
 					}}
 				/>
@@ -91,6 +91,7 @@ export function UploadPanel() {
 								key={resolution}
 								type="button"
 								disabled={busy}
+								aria-pressed={selected}
 								onClick={() =>
 									setResolutions((current) =>
 										current.includes(resolution)
@@ -110,20 +111,24 @@ export function UploadPanel() {
 				<p className="mt-2 text-xs text-neutral-500">Each selected resolution counts against your plan&apos;s usage.</p>
 			</fieldset>
 
-			{phase.name === "uploading" ? (
-				<div className="mt-6">
-					<div className="h-1.5 overflow-hidden rounded-full bg-neutral-800">
-						<div className="h-full bg-sky-400 transition-all" style={{ width: `${phase.percent}%` }} />
+			<div aria-live="polite">
+				{phase.name === "uploading" ? (
+					<div className="mt-6">
+						<div className="h-1.5 overflow-hidden rounded-full bg-neutral-800">
+							<div className="h-full bg-sky-400 transition-all" style={{ width: `${phase.percent}%` }} />
+						</div>
+						<p className="mt-2 text-xs text-neutral-400">Uploading, {Math.round(phase.percent)}%</p>
 					</div>
-					<p className="mt-2 text-xs text-neutral-400">Uploading, {Math.round(phase.percent)}%</p>
-				</div>
-			) : null}
+				) : null}
 
-			{phase.name === "creating" ? <p className="mt-6 text-xs text-neutral-400">Requesting an upload URL...</p> : null}
-			{phase.name === "completing" ? <p className="mt-6 text-xs text-neutral-400">Queueing transcoding...</p> : null}
+				{phase.name === "creating" ? <p className="mt-6 text-xs text-neutral-400">Requesting an upload URL...</p> : null}
+				{phase.name === "completing" ? <p className="mt-6 text-xs text-neutral-400">Queueing transcoding...</p> : null}
+			</div>
 
 			{error !== null ? (
-				<p className="mt-6 rounded-lg border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-200">{error}</p>
+				<p role="alert" className="mt-6 rounded-lg border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+					{error}
+				</p>
 			) : null}
 		</section>
 	);
