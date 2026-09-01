@@ -1,13 +1,45 @@
+import { cookies } from "next/headers";
+import { AutoRefresh } from "@/components/auto-refresh";
+import { UploadPanel } from "@/components/upload-panel";
+import { VideoCard } from "@/components/video-card";
 import { readConfig } from "@/lib/config";
+import { RECENT_VIDEOS_COOKIE, parseRecentVideos } from "@/lib/recent-videos";
+import { isSettled, loadVideos } from "@/lib/videos";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
 	const config = readConfig();
-
 	if (config === null) {
 		return <SetupScreen />;
 	}
 
-	return <p className="text-sm text-neutral-400">Ready. Upload UI arrives in Task 5.</p>;
+	const store = await cookies();
+	const ids = parseRecentVideos(store.get(RECENT_VIDEOS_COOKIE)?.value);
+	const loaded = await loadVideos(ids);
+	const videos = loaded.flatMap((entry) => (entry.ok ? [entry.video] : []));
+	const anyProcessing = videos.some((video) => !isSettled(video));
+
+	return (
+		<>
+			<UploadPanel />
+			<AutoRefresh enabled={anyProcessing} />
+			{videos.length > 0 ? (
+				<section className="pb-16">
+					<h2 className="text-xs uppercase tracking-wide text-neutral-500">Your uploads</h2>
+					<div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						{videos.map((video) => (
+							<VideoCard key={video.id} video={video} />
+						))}
+					</div>
+					<p className="mt-4 text-xs text-neutral-600">
+						Tracked in a browser cookie, because the API has no &quot;list my videos&quot; endpoint for API keys. Clearing
+						cookies clears this list. The videos themselves are unaffected.
+					</p>
+				</section>
+			) : null}
+		</>
+	);
 }
 
 function SetupScreen() {
