@@ -38,6 +38,13 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
 						<div className="rounded-xl border border-red-900 bg-red-950/40 p-8 text-sm text-red-200">
 							Transcoding failed for this video. Try uploading it again, or check the file plays locally.
 						</div>
+					) : isSettled(video) ? (
+						// status is "ready" but no rendition came back with a usable videoUrl.
+						// isSettled treats "ready" as done, so AutoRefresh will not retry here,
+						// and the message must not promise a refresh that will never come.
+						<div className="flex aspect-video items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-sm text-neutral-400">
+							This video is marked ready, but no playable rendition was returned. See the raw response for details.
+						</div>
 					) : (
 						<div className="flex aspect-video items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-sm text-neutral-400">
 							Transcoding. This page refreshes itself every 5 seconds.
@@ -50,6 +57,11 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
 					<pre className="mt-3 max-h-[28rem] overflow-auto rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-xs text-neutral-300">
 						{JSON.stringify(video, null, 2)}
 					</pre>
+					<p className="mt-3 text-xs text-neutral-600">
+						This panel prints the raw API response for this video. This page has no authentication, so anyone who
+						has or guesses this video&apos;s ID can see it. If you store anything in customMetadata, such as an
+						email address or an internal note, treat it as visible to anyone with the ID, not just to you.
+					</p>
 				</div>
 			</div>
 		</div>

@@ -28,6 +28,7 @@ export function VideoPlayer({ video, initial }: { video: VideoResult; initial: V
 						<button
 							key={label}
 							type="button"
+							aria-pressed={label === selected}
 							onClick={() => setSelected(label)}
 							className={`rounded-full border px-3 py-1 text-xs ${
 								label === selected ? "border-white bg-white text-neutral-900" : "border-neutral-700 text-neutral-400"
