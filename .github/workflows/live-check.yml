@@ -8,6 +8,11 @@ on:
 jobs:
   live-check:
     runs-on: ubuntu-latest
+    # The SDK's uploadVideo timeoutMs does not cover the storage PUT, and that PUT
+    # happens before the script's own 10 minute poll deadline starts. Without this,
+    # a stalled connection there is bounded only by the runner's 360 minute default,
+    # which can quietly burn hours of Actions minutes on a single hung weekly run.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
