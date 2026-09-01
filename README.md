@@ -22,6 +22,10 @@ Put your API key in `.env.local`. Create one at
 HYPERSERVE_API_KEY=your-key-here
 ```
 
+Optional: point the app at a different API base with `HYPERSERVE_API_URL`. It
+must include the `/api` suffix, for example `https://api.hyperserve.io/api`.
+Leave it unset to use the default, which is correct for almost everyone.
+
 Then:
 
 ```bash
@@ -63,7 +67,7 @@ await putVideoToStorage({
   uploadUrl: created.uploadUrl,
   contentType: created.contentType,
   file,
-  onProgress: (percent) => setProgress(percent),
+  // onProgress is optional; see lib/upload-flow.ts for how this app uses it.
 });
 ```
 
