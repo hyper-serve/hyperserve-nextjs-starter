@@ -11,8 +11,12 @@ export const ALL_RESOLUTIONS: readonly VideoResolution[] = [
 	"144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "4k", "8k",
 ];
 
-/** Two renditions: enough to show a resolution switcher without burning free-tier quota. */
-export const DEFAULT_RESOLUTIONS: [VideoResolution, ...VideoResolution[]] = ["480p", "1080p"];
+/**
+ * Two renditions: enough to show a resolution switcher without burning free-tier quota.
+ * The bundled sample.mov is 720p, so the higher default stays at 720p rather than 1080p,
+ * which would just upscale the sample instead of genuinely improving it.
+ */
+export const DEFAULT_RESOLUTIONS: [VideoResolution, ...VideoResolution[]] = ["480p", "720p"];
 
 export type FileCheck = { ok: true } | { ok: false; message: string };
 

@@ -50,7 +50,7 @@ reaches the browser:
 const created = await client.createVideo({
   filename: "sample.mov",
   fileSizeBytes: 187025,
-  resolutions: ["480p", "1080p"],
+  resolutions: ["480p", "720p"],
   isPublic: true,
   thumbnailTimestampsSeconds: [1],
 });

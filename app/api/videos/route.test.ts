@@ -86,7 +86,7 @@ describe("POST /api/videos", () => {
 		createVideo.mockResolvedValue({ id: "vid-1", uploadUrl: "u", contentType: "c", isPublic: true, resolutions: {} });
 		const { POST } = await import("./route");
 		await POST(post({ filename: "a.mov", fileSizeBytes: 10 }));
-		expect(createVideo).toHaveBeenCalledWith(expect.objectContaining({ resolutions: ["480p", "1080p"] }));
+		expect(createVideo).toHaveBeenCalledWith(expect.objectContaining({ resolutions: ["480p", "720p"] }));
 	});
 
 	it("ignores unknown resolution strings rather than sending them to the API", async () => {
