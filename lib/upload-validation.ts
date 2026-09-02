@@ -31,7 +31,7 @@ export function extensionOf(name: string): string | null {
 
 export function checkFile(input: { name: string; size: number }): FileCheck {
 	const extension = extensionOf(input.name);
-	if (extension === null || !SUPPORTED_EXTENSIONS.includes(extension as never)) {
+	if (extension === null || !(SUPPORTED_EXTENSIONS as readonly string[]).includes(extension)) {
 		return {
 			ok: false,
 			message: `Unsupported file type. Supported: ${SUPPORTED_EXTENSIONS.join(", ")}`,

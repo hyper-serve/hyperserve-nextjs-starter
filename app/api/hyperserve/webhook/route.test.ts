@@ -94,4 +94,21 @@ describe("POST /api/hyperserve/webhook", () => {
 		await POST(post(payload, sign(payload)));
 		expect(listWebhookLogEntries()[0].rawBody).toBe(payload);
 	});
+
+	it("truncates an oversized body in the log without affecting signature verification", async () => {
+		const { POST } = await import("./route");
+		const bigPayload = JSON.stringify({
+			webhookName: "starter",
+			event: "video-processing-success",
+			videoId: "vid-1",
+			data: { padding: "x".repeat(20000) },
+		});
+		const response = await POST(post(bigPayload, sign(bigPayload)));
+
+		expect(response.status).toBe(200);
+		const entry = listWebhookLogEntries()[0];
+		expect(entry.verified).toBe(true);
+		expect(entry.rawBody.length).toBe(8192);
+		expect(entry.rawBody).toBe(bigPayload.slice(0, 8192));
+	});
 });

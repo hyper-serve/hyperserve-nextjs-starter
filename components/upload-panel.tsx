@@ -140,9 +140,20 @@ async function postJson(url: string, body: unknown): Promise<Record<string, unkn
 		headers: { "content-type": "application/json" },
 		body: JSON.stringify(body),
 	});
-	const payload = await response.json();
 	if (!response.ok) {
-		throw new Error(typeof payload.error === "string" ? payload.error : `Request to ${url} failed.`);
+		// A proxy error page (413, a Next error page) is not JSON, so parse defensively
+		// rather than letting a SyntaxError mask the real, more useful message below.
+		const payload = await safeJson(response);
+		const message = typeof payload?.error === "string" ? payload.error : `Request to ${url} failed with status ${response.status}.`;
+		throw new Error(message);
 	}
-	return payload;
+	return (await response.json()) as Record<string, unknown>;
+}
+
+async function safeJson(response: Response): Promise<Record<string, unknown> | null> {
+	try {
+		return (await response.json()) as Record<string, unknown>;
+	} catch {
+		return null;
+	}
 }

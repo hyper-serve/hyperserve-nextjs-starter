@@ -38,9 +38,8 @@ Hyperserve returns MP4 renditions, so you can see the conversion happen.
 
 ## What just happened
 
-Three API calls, all in
-[`components/upload-panel.tsx`](components/upload-panel.tsx) and the routes it
-posts to.
+Three API calls, in [`lib/upload-flow.ts`](lib/upload-flow.ts) and the routes
+it posts to.
 
 **1. Ask for a presigned URL.** Server-side, in
 [`app/api/videos/route.ts`](app/api/videos/route.ts), so your API key never
@@ -115,7 +114,10 @@ barrier this starter is meant to avoid.
    [localhost:3000/webhooks](http://localhost:3000/webhooks).
 
 The receiver is
-[`app/api/hyperserve/webhook/route.ts`](app/api/hyperserve/webhook/route.ts):
+[`app/api/hyperserve/webhook/route.ts`](app/api/hyperserve/webhook/route.ts).
+This is the shape of it, abridged: the full version also logs every event
+(accepted or rejected) to the in-memory log behind
+[`/webhooks`](http://localhost:3000/webhooks), which the snippet below leaves out.
 
 ```typescript
 export async function POST(request: Request) {
@@ -123,9 +125,16 @@ export async function POST(request: Request) {
   // and breaks the signature.
   const rawBody = await request.text();
 
+  const secret = process.env.HYPERSERVE_WEBHOOK_SECRET;
+  if (!secret) {
+    // Fail loudly and by name. Passing an empty string to the SDK reaches
+    // WebCrypto with a zero-length key and throws an opaque DataError instead.
+    throw new Error("HYPERSERVE_WEBHOOK_SECRET is not set.");
+  }
+
   const verified = await verifyWebhookSignature({
     signature: request.headers.get("x-hyperserve-signature") ?? "",
-    secret: process.env.HYPERSERVE_WEBHOOK_SECRET!,
+    secret,
     body: rawBody,
   });
 
@@ -142,7 +151,8 @@ secret. `verifyWebhookSignature` from the SDK does this check for you.
 
 Events that fail verification are logged and shown as rejected rather than
 dropped, so a mismatched secret is visible instead of looking like nothing
-arrived.
+arrived. The two events Hyperserve sends are `video-processing-success` and
+`video-processing-fail`; branch on `event` in the parsed body to tell them apart.
 
 ## Using this in your own app
 
@@ -166,9 +176,15 @@ time-limited signed URLs.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fhyper-serve%2Fhyperserve-nextjs-starter&env=HYPERSERVE_API_KEY&envDescription=Your%20Hyperserve%20API%20key&envLink=https%3A%2F%2Fhyperserve.io%2Fapi-keys)
 
-A deployment gives you a public URL, so webhooks work without a tunnel. One
-caveat: the webhook log is held in memory, and on Vercel the receiver and the
-page can run on different instances, so the log may look empty there even
+There is no authentication anywhere in this app. A deployed instance is an
+open upload proxy: anyone with the URL can `POST /api/videos`, get a presigned
+URL, upload arbitrary content, and have it transcoded and served publicly from
+your Hyperserve account. Do not deploy this somewhere public with a real API
+key in it unless you are comfortable with that.
+
+A deployment does give you a public URL, so webhooks work without a tunnel.
+One caveat: the webhook log is held in memory, and on Vercel the receiver and
+the page can run on different instances, so the log may look empty there even
 though events are arriving. It works reliably when running locally.
 
 ## Limitations

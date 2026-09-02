@@ -13,7 +13,10 @@ export default function WebhooksPage() {
 
 	return (
 		<div className="py-10">
-			<AutoRefresh enabled intervalMs={3000} />
+			{/* Unlike the other AutoRefresh uses, this one has nothing to gate on: a webhook can
+			    arrive at any time, not just while a known video is transcoding. It polls
+			    unconditionally, so the interval is kept calm rather than snappy. */}
+			<AutoRefresh enabled intervalMs={10000} />
 			<h1 className="text-xl font-semibold text-white">Webhooks</h1>
 			<p className="mt-2 max-w-2xl text-sm text-neutral-400">
 				Hyperserve posts an event when transcoding finishes. This page shows what arrived at

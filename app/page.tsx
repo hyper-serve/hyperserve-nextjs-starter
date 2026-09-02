@@ -18,24 +18,36 @@ export default async function HomePage() {
 	const ids = parseRecentVideos(store.get(RECENT_VIDEOS_COOKIE)?.value);
 	const loaded = await loadVideos(ids);
 	const videos = loaded.flatMap((entry) => (entry.ok ? [entry.video] : []));
+	const failedCount = loaded.length - videos.length;
 	const anyProcessing = videos.some((video) => !isSettled(video));
 
 	return (
 		<>
 			<UploadPanel />
 			<AutoRefresh enabled={anyProcessing} />
-			{videos.length > 0 ? (
+			{videos.length > 0 || failedCount > 0 ? (
 				<section className="pb-16">
 					<h2 className="text-xs uppercase tracking-wide text-neutral-500">Your uploads</h2>
-					<div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-						{videos.map((video) => (
-							<VideoCard key={video.id} video={video} />
-						))}
-					</div>
-					<p className="mt-4 text-xs text-neutral-600">
-						Tracked in a browser cookie, because the API has no &quot;list my videos&quot; endpoint for API keys. Clearing
-						cookies clears this list. The videos themselves are unaffected.
-					</p>
+					{videos.length > 0 ? (
+						<div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{videos.map((video) => (
+								<VideoCard key={video.id} video={video} />
+							))}
+						</div>
+					) : null}
+					{failedCount > 0 ? (
+						// loadVideos never rejects; a rate limit or blip on one call should not blank the
+						// whole list, so surface the miss instead of silently rendering nothing.
+						<p className="mt-4 text-xs text-amber-400">
+							{failedCount} upload{failedCount === 1 ? "" : "s"} could not be loaded. This is usually temporary.
+						</p>
+					) : null}
+					{videos.length > 0 ? (
+						<p className="mt-4 text-xs text-neutral-600">
+							Tracked in a browser cookie, because the API has no &quot;list my videos&quot; endpoint for API keys. Clearing
+							cookies clears this list. The videos themselves are unaffected.
+						</p>
+					) : null}
 				</section>
 			) : null}
 		</>
