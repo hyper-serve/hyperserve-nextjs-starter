@@ -2,6 +2,24 @@
   "name": "hyperserve-nextjs-starter",
   "version": "0.1.0",
   "private": true,
+  "description": "Upload and transcode a video, receive webhooks and play it back. A Next.js starter for the Hyperserve API.",
+  "license": "MIT",
+  "homepage": "https://hyperserve.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyper-serve/hyperserve-nextjs-starter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hyper-serve/hyperserve-nextjs-starter/issues"
+  },
+  "keywords": [
+    "hyperserve",
+    "video",
+    "transcoding",
+    "webhooks",
+    "nextjs",
+    "starter"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
